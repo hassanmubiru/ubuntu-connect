@@ -25,6 +25,7 @@ import uuid
 from fastapi import APIRouter, Request
 
 from app.config import Config
+from app.models.user import User
 from app.repositories.dependencies import UserRepositoryDep
 from app.routers.dependencies import CurrentUser
 from app.schemas.profile import (
@@ -33,21 +34,27 @@ from app.schemas.profile import (
     PhotoUploadResponse,
     ProfileResponse,
 )
+from app.services.dependencies import TrustEngineDep
 from app.services.profile_service import ProfileService
 
 router = APIRouter(prefix="/api/profile", tags=["profile"])
 
 
-def _profile_service(users: UserRepositoryDep) -> ProfileService:
+def _profile_service(users: UserRepositoryDep, trust: TrustEngineDep) -> ProfileService:
     """Build a request-scoped :class:`ProfileService`.
 
     The object-storage bucket is read from the environment-sourced config
-    (Req 15.4); the repository is the request-scoped instance from dependency
-    injection so the whole request runs inside one transactional unit of work.
-    The Trust Engine recalculation hook is left unset here and wired by a later
-    integration task (the parallel Trust Engine task builds the engine).
+    (Req 15.4); the repository and Trust Engine are the request-scoped
+    instances from dependency injection so the whole request runs inside one
+    transactional unit of work. The Trust Engine recalculation hook fires
+    after any successful profile change so profile completeness is folded back
+    into the score (Req 5.3).
     """
-    return ProfileService(users, Config.from_env().photo_storage_bucket)
+    return ProfileService(
+        users,
+        Config.from_env().photo_storage_bucket,
+        trust_recalc=lambda user: trust.recalculate(user.id),
+    )
 
 
 @router.put(
