@@ -39,7 +39,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Expose repositories via FastAPI dependency injection so services never touch sessions directly
     - _Requirements: 15.1_
 
-  - [~] 2.3 Write unit tests for repositories against a test database
+  - [-] 2.3 Write unit tests for repositories against a test database
     - Test create/read round-trips, unique-phone enforcement, ascending/descending ordering helpers, and count helpers used by the Trust Engine and admin views
     - _Requirements: 15.1, 6.3_
 
@@ -50,7 +50,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Ensure write-path router dependency wraps handlers in a transaction that rolls back on exception (no partial writes)
     - _Requirements: 16.1, 16.2, 15.6_
 
-  - [~] 3.2 Write property test for validation rejection with per-field reasons
+  - [-] 3.2 Write property test for validation rejection with per-field reasons
     - **Feature: ubuntu-connect, Property 53: For any request with input that fails validation, the request is rejected, no changes are written to the data store, and the error response identifies each invalid field together with the reason it failed.**
     - **Validates: Requirements 16.1**
 
@@ -299,7 +299,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - _Requirements: 12.4, 11.6_
 
 - [ ] 12. Implement Africa's Talking SMS gateway and notifications
-  - [-] 12.1 Implement SmsGateway and NotificationService
+  - [x] 12.1 Implement SmsGateway and NotificationService
     - Create `integrations/sms_gateway.py` wrapping the Africa's Talking SMS API for OTP, match notifications, and safety alerts using env-configured credentials
     - Create `services/notification_service.py` truncating notifications to ≤160 chars, delivering within 30s, retrying up to 3 additional times, and writing a `notification_failures` record (phone + type) when all attempts fail
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
