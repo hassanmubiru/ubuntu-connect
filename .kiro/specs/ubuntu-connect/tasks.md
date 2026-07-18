@@ -95,7 +95,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - **Validates: Requirements 3.6**
 
 - [ ] 5. Implement OTP service (depends on SMS gateway interface from task 12)
-  - [~] 5.1 Implement OTPService generation, verification, and throttling
+  - [-] 5.1 Implement OTPService generation, verification, and throttling
     - Create `services/otp_service.py` generating a 6-digit code with `expires_at = now + 10min`, requesting SMS delivery, verifying match+expiry+attempt-count order, invalidating on 5th failed attempt, and enforcing the 5-requests-per-60-minute resend cap (invalidate prior OTP, reset failures on valid resend)
     - Create `routers/auth.py` endpoints `/api/auth/verify-otp` and `/api/auth/resend-otp`; on OTP creation trigger the Trust Engine recalculation hook after verification
     - Handle SMS send failure by returning a send-failure error while keeping resend available
@@ -126,7 +126,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - **Validates: Requirements 2.9**
 
 - [ ] 6. Implement profile service
-  - [~] 6.1 Implement ProfileService and routes
+  - [-] 6.1 Implement ProfileService and routes
     - Create `services/profile_service.py` validating and persisting bio (≤500), interests (≤20 items each ≤50, leaving existing unchanged on rejection), and photo (JPEG/PNG, ≤5 MB, storing URL/key), and returning profiles including Trust_Score and Verified_Phone
     - Create `routers/profiles.py` with `PUT /api/profile/bio`, `PUT /api/profile/interests`, `POST /api/profile/photo`, `GET /api/profile/{id}`; trigger Trust Engine recalculation on profile updates
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7, 4.8, 9.4_
@@ -148,7 +148,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - **Validates: Requirements 4.8, 9.4**
 
 - [ ] 7. Implement the Trust Engine
-  - [~] 7.1 Implement deterministic Trust Engine and endpoints
+  - [-] 7.1 Implement deterministic Trust Engine and endpoints
     - Create `services/trust_engine.py` computing `clamp(30*verified + 10*populated_fields + min(messages_sent,40) - 15*confirmed_reports, 0, 100)` and writing one `trust_reasons` row per factor on each recalculation
     - Create `routers/trust.py` with `GET /api/trust/{userId}` and `GET /api/trust/{userId}/explanation`, returning recorded reasons or an error when none exist
     - Expose a recalculation entry point invoked on phone verification, profile update, confirmed report, and message activity
@@ -188,7 +188,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create `ai/moderation_service.py` returning a label via OpenAI within budget and falling back to rules on timeout/error, and `ai/scam_detector.py` returning a [0,100] score with the same fallback behavior; both return the same typed result regardless of path
     - _Requirements: 7.1, 7.5, 7.6, 8.1, 8.2, 8.6_
 
-  - [~] 8.4 Write property test for valid moderation label including fallback
+  - [-] 8.4 Write property test for valid moderation label including fallback
     - **Feature: ubuntu-connect, Property 26: For any message — including when the OpenAI API is unavailable — moderation assigns a Moderation_Result that is one of "approved", "flagged", or "blocked".**
     - Mock the OpenAI client to simulate success, timeout, and error paths
     - **Validates: Requirements 7.1, 7.5**
