@@ -201,7 +201,14 @@ def test_jwt_expiry_is_24_hours_after_issuance():
         uuid.uuid4(), "test-secret", issued_at=issued
     )
     assert expires_at == issued + TOKEN_TTL
-    claims = jwt.decode(token, "test-secret", algorithms=[JWT_ALGORITHM])
+    # The token is deliberately issued in the past; skip expiry verification
+    # so we can inspect the raw exp/iat claims regardless of the current time.
+    claims = jwt.decode(
+        token,
+        "test-secret",
+        algorithms=[JWT_ALGORITHM],
+        options={"verify_exp": False},
+    )
     assert claims["exp"] - claims["iat"] == int(TOKEN_TTL.total_seconds())
 
 
