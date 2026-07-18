@@ -27,6 +27,7 @@ from app.config import Config
 from app.integrations.sms_gateway import SmsGateway
 from app.models.user import User
 from app.repositories.dependencies import OtpRepositoryDep, UserRepositoryDep
+from app.repositories.otp_repository import OtpRepository
 from app.repositories.user_repository import UserRepository
 from app.routers.dependencies import SmsGatewayDep
 from app.schemas.auth import (
