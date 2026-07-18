@@ -299,7 +299,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - _Requirements: 12.4, 11.6_
 
 - [ ] 12. Implement Africa's Talking SMS gateway and notifications
-  - [~] 12.1 Implement SmsGateway and NotificationService
+  - [-] 12.1 Implement SmsGateway and NotificationService
     - Create `integrations/sms_gateway.py` wrapping the Africa's Talking SMS API for OTP, match notifications, and safety alerts using env-configured credentials
     - Create `services/notification_service.py` truncating notifications to ≤160 chars, delivering within 30s, retrying up to 3 additional times, and writing a `notification_failures` record (phone + type) when all attempts fail
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
