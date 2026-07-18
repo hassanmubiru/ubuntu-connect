@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from jose import jwt
 from sqlalchemy import create_engine, func, select
+from sqlalchemy.pool import StaticPool
 
 from app import db
 from app.config import Config
@@ -39,7 +40,10 @@ ADMIN_PHONE = "+233201234567"
 def engine():
     """Bind an isolated in-memory SQLite engine shared across requests."""
     eng = create_engine(
-        "sqlite://", future=True, connect_args={"check_same_thread": False}
+        "sqlite://",
+        future=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
     )
     db.configure_engine(eng)
     Base.metadata.create_all(eng)
