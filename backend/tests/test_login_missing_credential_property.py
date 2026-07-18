@@ -29,7 +29,11 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from hypothesis import given, settings
 from hypothesis import strategies as st
+from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 
+from app import db
+from app.models import Base
 from app.routers import auth as auth_router
 from app.schemas.errors import register_exception_handlers
 
@@ -49,7 +53,26 @@ def _build_app() -> FastAPI:
 
 @pytest.fixture(scope="module")
 def client() -> TestClient:
-    return TestClient(_build_app())
+    """Bind an isolated in-memory SQLite store and yield a TestClient.
+
+    The login route's session dependency is solved before body validation, so
+    a bound engine is required even though every generated request is rejected
+    at validation and never touches the store. A ``StaticPool`` keeps a single
+    connection so the schema is visible across the request thread.
+    """
+    engine = create_engine(
+        "sqlite://",
+        future=True,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    db.configure_engine(engine)
+    Base.metadata.create_all(engine)
+    try:
+        yield TestClient(_build_app())
+    finally:
+        Base.metadata.drop_all(engine)
+        db.reset_engine()
 
 
 # Keys that are never the required ``phone`` credential, used to build bodies
