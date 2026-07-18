@@ -41,6 +41,7 @@ _GENERIC_MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.CONFLICT: "The request conflicts with the current state.",
     ErrorCode.POLICY_VIOLATION: "The request violates platform policy.",
     ErrorCode.RATE_LIMITED: "Too many requests. Please try again later.",
+    ErrorCode.SEND_FAILURE: "The message could not be sent. Please try again.",
     ErrorCode.TIMEOUT: "The request timed out. Please try again.",
     ErrorCode.INTERNAL_ERROR: "An unexpected error occurred. Please try again.",
 }
