@@ -85,13 +85,16 @@ def update_interests(
     body: InterestsUpdateRequest,
     current_user: CurrentUser,
     users: UserRepositoryDep,
+    trust: TrustEngineDep,
 ) -> ProfileResponse:
     """Save up to 20 interests, each at most 50 characters (Req 4.3, 4.4).
 
     A list exceeding those limits is rejected naming the ``interests`` field
     and the previously stored interests are left unchanged.
     """
-    updated = _profile_service(users).update_interests(current_user, body.interests)
+    updated = _profile_service(users, trust).update_interests(
+        current_user, body.interests
+    )
     return ProfileResponse.model_validate(updated)
 
 
