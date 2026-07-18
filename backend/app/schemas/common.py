@@ -133,6 +133,7 @@ class ErrorCode(str, Enum):
     CONFLICT = "conflict"
     POLICY_VIOLATION = "policy_violation"
     RATE_LIMITED = "rate_limited"
+    SEND_FAILURE = "send_failure"
     TIMEOUT = "timeout"
     INTERNAL_ERROR = "internal_error"
 
