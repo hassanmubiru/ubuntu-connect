@@ -193,7 +193,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Mock the OpenAI client to simulate success, timeout, and error paths
     - **Validates: Requirements 7.1, 7.5**
 
-  - [~] 8.5 Write property test for bounded scam score including fallback
+  - [-] 8.5 Write property test for bounded scam score including fallback
     - **Feature: ubuntu-connect, Property 30: For any message that passes moderation — including when OpenAI errors or exceeds its time budget — the assigned Scam_Score is an integer in [0, 100] and is stored on the message before delivery.**
     - **Validates: Requirements 8.1, 8.2, 8.6**
 
