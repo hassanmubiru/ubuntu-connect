@@ -23,7 +23,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Wire `config.validate()` into the `main.py` app factory startup path
     - _Requirements: 15.4, 15.5_
 
-  - [~] 1.3 Write property test for fail-fast env validation
+  - [-] 1.3 Write property test for fail-fast env validation
     - **Feature: ubuntu-connect, Property 52: For any subset of required environment variables that is absent at startup, the backend halts without serving requests and emits an error naming each missing variable.**
     - **Validates: Requirements 15.5**
 
@@ -34,7 +34,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create DB engine/session factory and a transactional session dependency used by routers
     - _Requirements: 1.1, 6.1, 12.1, 5.6, 2.2, 14.4_
 
-  - [~] 2.2 Implement repository classes over the models
+  - [-] 2.2 Implement repository classes over the models
     - Create `repositories/base.py` and `user_repository.py`, `message_repository.py`, `report_repository.py`, `otp_repository.py`, `trust_reason_repository.py` holding all SQLAlchemy queries (create/read/update, ordering helpers, existence checks, count helpers)
     - Expose repositories via FastAPI dependency injection so services never touch sessions directly
     - _Requirements: 15.1_
@@ -44,7 +44,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - _Requirements: 15.1, 6.3_
 
 - [ ] 3. Implement Pydantic schemas and global error envelope
-  - [~] 3.1 Define request/response schemas and shared error envelope
+  - [-] 3.1 Define request/response schemas and shared error envelope
     - Create `schemas/` Pydantic models for register, verify-otp, resend-otp, login, profile bio/interests/photo, message send, trust, report, and admin resolution requests/responses with field constraints (full_name 2–100, E.164 phone, bio ≤500, interests ≤20 items each ≤50, content 1–2000, reason 1–1000)
     - Implement the shared error envelope `{error:{code,message,fields[]}}` and a global exception handler mapping validation/auth/authorization/not_found/conflict/policy_violation/rate_limited/timeout/internal_error, ensuring generic messages and no leaked internals
     - Ensure write-path router dependency wraps handlers in a transaction that rolls back on exception (no partial writes)
@@ -175,12 +175,12 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - _Requirements: 5.8_
 
 - [ ] 8. Implement AI moderation and scam detection with rule-based fallbacks
-  - [~] 8.1 Implement OpenAI client and prompt modules
+  - [-] 8.1 Implement OpenAI client and prompt modules
     - Create `integrations/openai_client.py` wrapping calls with explicit timeouts (5s moderation, 3s scam) and raising on timeout/error
     - Create `ai/prompts/moderation_prompt.py` and `ai/prompts/scam_prompt.py` that build prompts only, with no calling logic
     - _Requirements: 15.3, 7.6, 8.2_
 
-  - [~] 8.2 Implement rule-based fallbacks
+  - [-] 8.2 Implement rule-based fallbacks
     - Create `ai/fallback/moderation_rules.py` mapping harmful keyword patterns to `blocked`/`flagged`/`approved`, and `ai/fallback/scam_rules.py` scoring money/urgency/prize-airtime/link signals clamped to [0,100]
     - _Requirements: 7.5, 8.2_
 
