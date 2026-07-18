@@ -27,7 +27,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - **Feature: ubuntu-connect, Property 52: For any subset of required environment variables that is absent at startup, the backend halts without serving requests and emits an error naming each missing variable.**
     - **Validates: Requirements 15.5**
 
-- [ ] 2. Implement data models and repository layer
+- [x] 2. Implement data models and repository layer
   - [x] 2.1 Define SQLAlchemy ORM models and DB session wiring
     - Create `models/` entities: `User` (id, full_name, phone unique, bio, interests JSONB, profile_photo, trust_score, verified_phone, is_admin, created_at), `Message` (sender_id, receiver_id, content, moderation_result, scam_score nullable, delivered, created_at), `Report` (reporter, reported_user, reason, status, created_at), `TrustReason` (user_id, factor, contribution, description, created_at), `OtpCode` (user_id, code, failed_attempts, expires_at, invalidated, created_at)
     - Add `NotificationFailure` model (phone, notification_type, created_at) for Req 14.4
@@ -39,27 +39,27 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Expose repositories via FastAPI dependency injection so services never touch sessions directly
     - _Requirements: 15.1_
 
-  - [-] 2.3 Write unit tests for repositories against a test database
+  - [x] 2.3 Write unit tests for repositories against a test database
     - Test create/read round-trips, unique-phone enforcement, ascending/descending ordering helpers, and count helpers used by the Trust Engine and admin views
     - _Requirements: 15.1, 6.3_
 
-- [ ] 3. Implement Pydantic schemas and global error envelope
+- [x] 3. Implement Pydantic schemas and global error envelope
   - [x] 3.1 Define request/response schemas and shared error envelope
     - Create `schemas/` Pydantic models for register, verify-otp, resend-otp, login, profile bio/interests/photo, message send, trust, report, and admin resolution requests/responses with field constraints (full_name 2–100, E.164 phone, bio ≤500, interests ≤20 items each ≤50, content 1–2000, reason 1–1000)
     - Implement the shared error envelope `{error:{code,message,fields[]}}` and a global exception handler mapping validation/auth/authorization/not_found/conflict/policy_violation/rate_limited/timeout/internal_error, ensuring generic messages and no leaked internals
     - Ensure write-path router dependency wraps handlers in a transaction that rolls back on exception (no partial writes)
     - _Requirements: 16.1, 16.2, 15.6_
 
-  - [-] 3.2 Write property test for validation rejection with per-field reasons
+  - [x] 3.2 Write property test for validation rejection with per-field reasons
     - **Feature: ubuntu-connect, Property 53: For any request with input that fails validation, the request is rejected, no changes are written to the data store, and the error response identifies each invalid field together with the reason it failed.**
     - **Validates: Requirements 16.1**
 
-  - [-] 3.3 Write property test for safe unhandled-exception responses
+  - [x] 3.3 Write property test for safe unhandled-exception responses
     - **Feature: ubuntu-connect, Property 54: For any backend operation that raises an unhandled exception, the response carries a generic message with no internal details and previously persisted data is left unchanged.**
     - **Validates: Requirements 16.2**
 
 - [ ] 4. Implement authentication and JWT issuance
-  - [-] 4.1 Implement AuthService registration and login
+  - [x] 4.1 Implement AuthService registration and login
     - Create `services/auth_service.py` registering users (verified_phone false, trust_score 0, created_at set) with duplicate-phone rejection and validation, and login issuing a JWT (24h expiry) only for verified accounts
     - Create `routers/auth.py` with `/api/auth/register` and `/api/auth/login` declaring explicit `response_model`
     - Implement the JWT auth-guard dependency rejecting missing/expired/invalid tokens, plus an admin role guard
@@ -184,7 +184,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create `ai/fallback/moderation_rules.py` mapping harmful keyword patterns to `blocked`/`flagged`/`approved`, and `ai/fallback/scam_rules.py` scoring money/urgency/prize-airtime/link signals clamped to [0,100]
     - _Requirements: 7.5, 8.2_
 
-  - [-] 8.3 Implement ModerationService and ScamDetector
+  - [x] 8.3 Implement ModerationService and ScamDetector
     - Create `ai/moderation_service.py` returning a label via OpenAI within budget and falling back to rules on timeout/error, and `ai/scam_detector.py` returning a [0,100] score with the same fallback behavior; both return the same typed result regardless of path
     - _Requirements: 7.1, 7.5, 7.6, 8.1, 8.2, 8.6_
 
