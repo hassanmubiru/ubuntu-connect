@@ -788,3 +788,120 @@ Ubuntu Connect has substantial pure business logic (Trust Engine scoring, valida
 *For any* displayed profile, the Trust_Score badge shows the user's score as an integer in [0, 100], and is rendered with the accent color #F59E0B if and only if the score is 70 or greater.
 
 **Validates: Requirements 18.4, 18.5, 18.6**
+
+
+## Error Handling
+
+Error handling is uniform across the backend and mirrored by consistent frontend states.
+
+### Backend Error Model
+
+All error responses share one envelope so the frontend can handle them generically:
+
+```json
+{
+  "error": {
+    "code": "validation_error | auth_error | authorization_error | not_found | conflict | policy_violation | rate_limited | internal_error | timeout",
+    "message": "human-readable, safe-to-display summary",
+    "fields": [ { "field": "phone", "reason": "must be E.164 format" } ]
+  }
+}
+```
+
+- **Validation errors (Req 16.1):** produced by Pydantic before any service runs. Every invalid field appears in `fields` with a reason. No repository write occurs because validation precedes service invocation.
+- **Auth vs authorization:** missing/expired/invalid JWT → `auth_error` (Req 3.6); authenticated but non-admin on admin routes → `authorization_error` (Req 11.1).
+- **Domain conflicts:** duplicate phone (Req 1.2), duplicate pending report (Req 12.6), and resolving a non-pending report (Req 11.6) return `conflict`.
+- **Policy violations:** blocked messages return `policy_violation` and never persist (Req 7.2).
+- **Rate limiting:** OTP resend cap returns `rate_limited` including the 60-minute window (Req 2.8).
+- **Unhandled exceptions (Req 16.2):** a global handler returns a generic `internal_error` message, logs the detail server-side only, and relies on transactional rollback so no partial writes persist.
+
+### Transactional Integrity
+
+Every write-path service method runs inside a single database transaction opened by the router dependency. On any raised exception the transaction rolls back, guaranteeing the "no partial writes" guarantees in Requirements 1.2, 4.4, 11.5, 12.x, 16.1, and 16.2. The message pipeline persists only after moderation resolves, so a `blocked` result leaves nothing behind.
+
+### AI Timeout and Fallback Handling
+
+The `openai_client` wraps every call with an explicit timeout — 5s for moderation (Req 7.6) and 3s for scam scoring (Req 8.2). On timeout or any client error, the calling service catches the exception and invokes its deterministic rule-based fallback, which always returns a valid result (a label in the moderation enum, or a score in [0,100]). The pipeline cannot stall or crash because of the AI provider; protection degrades gracefully to rules.
+
+### SMS/USSD Failure Handling
+
+- OTP send failure surfaces a user-facing send error and keeps resend available (Req 2.9).
+- Notification delivery retries up to 3 additional times; total failure writes a `notification_failures` record with phone and type (Req 14.3, 14.4).
+- USSD invalid selections re-render the current menu rather than erroring the session (Req 13.9); empty name during USSD register returns an in-session error (Req 13.4).
+
+### Frontend Error and Async States
+
+`useAsyncResource` implements the state machine every data view uses: `idle → loading → (success | empty | error | timeout)`.
+
+- Loading state while a request is in flight (Req 16.3, 10.4).
+- Empty state when the resource resolves with no data (Req 16.4, 10.5).
+- Error state with a retry action on backend error (Req 16.5, 10.6), preserving the session.
+- Timeout state after 30s with no response, offering retry (Req 16.6).
+- Unauthenticated navigation to protected pages redirects to login (Req 10.7).
+
+## Environment and Configuration
+
+All external credentials and endpoints are read from environment variables; none appear as literals in source (Req 15.4). `config.py` defines the required set and validates presence at startup.
+
+| Variable | Purpose |
+|----------|---------|
+| `DATABASE_URL` | PostgreSQL connection |
+| `JWT_SECRET` | JWT signing key |
+| `OPENAI_API_KEY` | OpenAI access |
+| `OPENAI_BASE_URL` | OpenAI endpoint |
+| `AT_API_KEY` | Africa's Talking API key |
+| `AT_USERNAME` | Africa's Talking username |
+| `AT_SMS_SENDER_ID` | SMS sender/shortcode |
+| `AT_USSD_SERVICE_CODE` | USSD service code |
+| `PHOTO_STORAGE_BUCKET` | Object storage for profile photos |
+
+**Fail-fast startup (Req 15.5):** during app construction, `config.validate()` collects every missing required variable and, if the set is non-empty, raises before the server binds a port, emitting an error that names each missing variable. The app never serves requests in a partially configured state.
+
+**OpenAPI (Req 15.6):** each router declares typed request bodies and an explicit `response_model`, so the auto-generated `/docs` and `/openapi.json` describe both request and response schemas for every endpoint.
+
+## Testing Strategy
+
+The platform uses a dual approach: property-based tests for universal guarantees over generated inputs, and example/integration/smoke tests for specific scenarios, wiring, and configuration.
+
+### Property-Based Testing
+
+PBT applies to the backend's pure and orchestration logic and to enumerable frontend design tokens.
+
+- **Library:** `Hypothesis` for the FastAPI/Python backend; `fast-check` for the TypeScript frontend token/rendering properties. These libraries are used as-is — property-based testing is never implemented from scratch.
+- **Iterations:** every property test runs a minimum of 100 generated examples.
+- **AI isolation:** the OpenAI client is mocked in property tests so we exercise our pipeline, thresholds, and fallbacks — not the provider. Timeout/error paths are simulated to drive fallback code.
+- **Tagging:** each property test is tagged with a comment referencing its design property, in the format:
+  `Feature: ubuntu-connect, Property {number}: {property_text}`
+- Each of the 59 correctness properties above is implemented by exactly one property-based test.
+
+Generators of note:
+- E.164 phones and near-miss non-E.164 strings (Property 3) using realistic African prefixes (+234, +27, +233, +254).
+- User states across the four trust factors (Properties 18–21).
+- Messages of varying length and content, plus forced moderation labels and scam scores via mocks (Properties 22–32).
+- Realistic names/interests in examples, e.g. Amara Okafor (+2348031234567), Thandiwe Nkosi (+27821234567), Kwame Mensah (+233201234567), Zainab Abdullahi (+254712345678).
+
+### Unit and Example Tests
+
+Reserved for concrete scenarios and boundaries that are clearer as examples than as properties:
+- `created_at` set on registration (Req 1.6), OTP 5th-attempt and 6th-resend boundaries (Req 2.5, 2.8), photo >5MB boundary (Req 4.7), explanation-with-no-entries (Req 5.8), unknown recipient/report target (Req 6.4, 12.4), non-pending/missing report resolution (Req 11.6), empty USSD inbox and empty-name register (Req 13.8, 13.4), AI timeout switchovers (Req 7.6, 8.2).
+- Frontend UI states: loading/empty/error/timeout renders (Req 10.4–10.6, 16.3–16.6), responsive column layouts (Req 17.1, 17.2), focus indicators (Req 17.4), palette/typeface theme tokens (Req 18.1, 18.2), dashboard trust/reasons presence and unauthenticated redirect (Req 10.2, 10.7).
+
+### Integration Tests
+
+For behavior that spans components or timing rather than varying with input:
+- SSE delivery to an active session within 2 seconds of persistence (Req 6.2), using a fake subscriber and controlled clock (1–3 examples).
+- End-to-end message pipeline with a stubbed OpenAI returning each label/score band, asserting persistence, delivery, warnings, and admin alerts together.
+- Africa's Talking SMS/USSD clients against a mocked gateway to confirm request shaping, retries, and USSD session parsing.
+
+### Smoke and Architecture Tests
+
+For one-time structural and configuration guarantees (not input-varying):
+- **Repository boundary (Req 15.1):** static test asserting no module under `services/` imports `sqlalchemy`.
+- **Shared hooks (Req 15.2):** static test asserting each shared hook is imported by 2+ components.
+- **AI modularity (Req 15.3):** static test asserting moderation and scam services are separate modules and prompts live in independent prompt modules with no calling logic.
+- **No hardcoded secrets (Req 15.4):** scan asserting credentials/endpoints are absent as literals.
+- **OpenAPI completeness (Req 15.6):** assert the generated schema defines request and response models for every route.
+
+### Coverage Traceability
+
+Every acceptance criterion maps to at least one test: property tests cover the 59 correctness properties (input-varying logic and thresholds), example/edge tests cover boundaries and UI states, integration tests cover timing and cross-component flows, and smoke/architecture tests cover the structural requirements (15.1–15.4, 15.6).
