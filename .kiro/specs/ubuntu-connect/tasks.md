@@ -11,7 +11,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
 ## Tasks
 
 - [ ] 1. Scaffold backend project and fail-fast configuration
-  - [-] 1.1 Create backend project structure and tooling
+  - [x] 1.1 Create backend project structure and tooling
     - Create the `backend/app/` package tree (`routers/`, `services/`, `repositories/`, `ai/` with `fallback/` and `prompts/`, `integrations/`, `models/`, `schemas/`) with `__init__.py` files
     - Add `pyproject.toml`/`requirements.txt` pinning FastAPI, Pydantic v2, SQLAlchemy 2.x, psycopg, python-jose (JWT), pytest, and Hypothesis
     - Create `backend/app/main.py` app factory and a `pytest.ini`/`conftest.py` with a Hypothesis profile of min 100 examples
