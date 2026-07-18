@@ -54,12 +54,12 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - **Feature: ubuntu-connect, Property 53: For any request with input that fails validation, the request is rejected, no changes are written to the data store, and the error response identifies each invalid field together with the reason it failed.**
     - **Validates: Requirements 16.1**
 
-  - [~] 3.3 Write property test for safe unhandled-exception responses
+  - [-] 3.3 Write property test for safe unhandled-exception responses
     - **Feature: ubuntu-connect, Property 54: For any backend operation that raises an unhandled exception, the response carries a generic message with no internal details and previously persisted data is left unchanged.**
     - **Validates: Requirements 16.2**
 
 - [ ] 4. Implement authentication and JWT issuance
-  - [~] 4.1 Implement AuthService registration and login
+  - [-] 4.1 Implement AuthService registration and login
     - Create `services/auth_service.py` registering users (verified_phone false, trust_score 0, created_at set) with duplicate-phone rejection and validation, and login issuing a JWT (24h expiry) only for verified accounts
     - Create `routers/auth.py` with `/api/auth/register` and `/api/auth/login` declaring explicit `response_model`
     - Implement the JWT auth-guard dependency rejecting missing/expired/invalid tokens, plus an admin role guard
@@ -184,7 +184,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create `ai/fallback/moderation_rules.py` mapping harmful keyword patterns to `blocked`/`flagged`/`approved`, and `ai/fallback/scam_rules.py` scoring money/urgency/prize-airtime/link signals clamped to [0,100]
     - _Requirements: 7.5, 8.2_
 
-  - [~] 8.3 Implement ModerationService and ScamDetector
+  - [-] 8.3 Implement ModerationService and ScamDetector
     - Create `ai/moderation_service.py` returning a label via OpenAI within budget and falling back to rules on timeout/error, and `ai/scam_detector.py` returning a [0,100] score with the same fallback behavior; both return the same typed result regardless of path
     - _Requirements: 7.1, 7.5, 7.6, 8.1, 8.2, 8.6_
 
