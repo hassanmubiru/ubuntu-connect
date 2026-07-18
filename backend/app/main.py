@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from fastapi import FastAPI
 
+from app.config import Config
+
 APP_TITLE = "Ubuntu Connect API"
 APP_DESCRIPTION = (
     "AI-powered trust platform for safe social networking across Africa."
