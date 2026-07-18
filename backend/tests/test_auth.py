@@ -120,7 +120,8 @@ def test_register_creates_user_with_defaults(client, engine):
     )
     assert resp.status_code == 201
     body = resp.json()
-    assert body["otp_sent"] is False
+    # Registration now triggers the first OTP send; the fake gateway accepts it.
+    assert body["otp_sent"] is True
     assert body["user_id"]
 
     session = db.get_session_factory()()

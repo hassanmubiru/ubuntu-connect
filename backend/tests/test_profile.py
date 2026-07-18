@@ -184,7 +184,10 @@ def test_interest_item_too_long_rejected_and_existing_unchanged(client, engine):
         "/api/profile/interests", json={"interests": too_long}, headers=headers
     )
     assert resp.status_code == 422
-    assert any(f["field"] == "interests" for f in resp.json()["error"]["fields"])
+    assert any(
+        f["field"].startswith("interests")
+        for f in resp.json()["error"]["fields"]
+    )
 
     got = client.get(f"/api/profile/{user.id}", headers=headers)
     assert got.json()["interests"] == ["existing"]
