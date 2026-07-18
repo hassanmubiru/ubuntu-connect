@@ -25,7 +25,8 @@ For each generated scenario:
 
 from __future__ import annotations
 
-import pytest
+from contextlib import contextmanager
+
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from sqlalchemy import create_engine, func, select
@@ -45,9 +46,13 @@ from app.services.notification_service import (
 )
 
 
-@pytest.fixture()
-def session():
-    """Bind an isolated in-memory SQLite engine and yield a live session."""
+@contextmanager
+def _in_memory_session():
+    """Yield a live session on a fresh, isolated in-memory SQLite engine.
+
+    A context manager (rather than a function-scoped fixture) so each generated
+    Hypothesis example runs against its own reset database.
+    """
     engine = create_engine(
         "sqlite://", future=True, connect_args={"check_same_thread": False}
     )
