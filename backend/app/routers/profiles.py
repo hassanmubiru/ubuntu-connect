@@ -107,6 +107,7 @@ async def upload_photo(
     request: Request,
     current_user: CurrentUser,
     users: UserRepositoryDep,
+    trust: TrustEngineDep,
 ) -> PhotoUploadResponse:
     """Store a JPEG/PNG photo of at most 5 MB (Req 4.5, 4.6, 4.7).
 
@@ -116,7 +117,7 @@ async def upload_photo(
     """
     content = await request.body()
     content_type = request.headers.get("content-type")
-    updated = _profile_service(users).update_photo(
+    updated = _profile_service(users, trust).update_photo(
         current_user, content, content_type
     )
     return PhotoUploadResponse(profile_photo=updated.profile_photo or "")
