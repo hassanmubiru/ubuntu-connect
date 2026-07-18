@@ -12,6 +12,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from app.config import Config
+from app.routers import auth as auth_router
 from app.schemas.errors import register_exception_handlers
 
 APP_TITLE = "Ubuntu Connect API"
@@ -46,6 +47,10 @@ def create_app() -> FastAPI:
     # exception rolls the transaction back before the response is formatted
     # and no partial write survives.
     register_exception_handlers(app)
+
+    # Feature routers. The auth router exposes registration and login
+    # (Req 1, 3); later tasks register the remaining feature routers here.
+    app.include_router(auth_router.router)
 
     @app.get("/health", tags=["system"])
     def health() -> dict[str, str]:
