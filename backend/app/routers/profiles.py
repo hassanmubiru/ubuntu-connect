@@ -132,10 +132,11 @@ def get_profile(
     user_id: uuid.UUID,
     current_user: CurrentUser,
     users: UserRepositoryDep,
+    trust: TrustEngineDep,
 ) -> ProfileResponse:
     """Return a user's profile with trust and verification state (Req 4.8, 9.4).
 
     An unknown ``user_id`` yields a not-found error.
     """
-    user = _profile_service(users).get_profile(user_id)
+    user = _profile_service(users, trust).get_profile(user_id)
     return ProfileResponse.model_validate(user)
