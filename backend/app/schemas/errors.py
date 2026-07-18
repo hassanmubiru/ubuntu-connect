@@ -155,6 +155,17 @@ class RateLimitedError(AppError):
     status_code = 429
 
 
+class SendFailureError(AppError):
+    """An outbound SMS could not be delivered by the gateway (Req 2.9).
+
+    Surfaced when the OTP SMS is rejected by the provider; the client is told
+    the code could not be sent and remains free to request it again.
+    """
+
+    code = ErrorCode.SEND_FAILURE
+    status_code = 502
+
+
 class TimeoutAppError(AppError):
     """An operation exceeded its time budget (Req 16.6)."""
 
