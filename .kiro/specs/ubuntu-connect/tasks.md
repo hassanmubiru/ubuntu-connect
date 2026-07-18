@@ -10,7 +10,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
 
 ## Tasks
 
-- [ ] 1. Scaffold backend project and fail-fast configuration
+- [x] 1. Scaffold backend project and fail-fast configuration
   - [x] 1.1 Create backend project structure and tooling
     - Create the `backend/app/` package tree (`routers/`, `services/`, `repositories/`, `ai/` with `fallback/` and `prompts/`, `integrations/`, `models/`, `schemas/`) with `__init__.py` files
     - Add `pyproject.toml`/`requirements.txt` pinning FastAPI, Pydantic v2, SQLAlchemy 2.x, psycopg, python-jose (JWT), pytest, and Hypothesis
@@ -23,7 +23,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Wire `config.validate()` into the `main.py` app factory startup path
     - _Requirements: 15.4, 15.5_
 
-  - [-] 1.3 Write property test for fail-fast env validation
+  - [x] 1.3 Write property test for fail-fast env validation
     - **Feature: ubuntu-connect, Property 52: For any subset of required environment variables that is absent at startup, the backend halts without serving requests and emits an error naming each missing variable.**
     - **Validates: Requirements 15.5**
 
@@ -34,7 +34,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create DB engine/session factory and a transactional session dependency used by routers
     - _Requirements: 1.1, 6.1, 12.1, 5.6, 2.2, 14.4_
 
-  - [-] 2.2 Implement repository classes over the models
+  - [x] 2.2 Implement repository classes over the models
     - Create `repositories/base.py` and `user_repository.py`, `message_repository.py`, `report_repository.py`, `otp_repository.py`, `trust_reason_repository.py` holding all SQLAlchemy queries (create/read/update, ordering helpers, existence checks, count helpers)
     - Expose repositories via FastAPI dependency injection so services never touch sessions directly
     - _Requirements: 15.1_
