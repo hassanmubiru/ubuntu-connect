@@ -44,7 +44,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - _Requirements: 15.1, 6.3_
 
 - [ ] 3. Implement Pydantic schemas and global error envelope
-  - [-] 3.1 Define request/response schemas and shared error envelope
+  - [x] 3.1 Define request/response schemas and shared error envelope
     - Create `schemas/` Pydantic models for register, verify-otp, resend-otp, login, profile bio/interests/photo, message send, trust, report, and admin resolution requests/responses with field constraints (full_name 2–100, E.164 phone, bio ≤500, interests ≤20 items each ≤50, content 1–2000, reason 1–1000)
     - Implement the shared error envelope `{error:{code,message,fields[]}}` and a global exception handler mapping validation/auth/authorization/not_found/conflict/policy_violation/rate_limited/timeout/internal_error, ensuring generic messages and no leaked internals
     - Ensure write-path router dependency wraps handlers in a transaction that rolls back on exception (no partial writes)
@@ -175,12 +175,12 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - _Requirements: 5.8_
 
 - [ ] 8. Implement AI moderation and scam detection with rule-based fallbacks
-  - [-] 8.1 Implement OpenAI client and prompt modules
+  - [x] 8.1 Implement OpenAI client and prompt modules
     - Create `integrations/openai_client.py` wrapping calls with explicit timeouts (5s moderation, 3s scam) and raising on timeout/error
     - Create `ai/prompts/moderation_prompt.py` and `ai/prompts/scam_prompt.py` that build prompts only, with no calling logic
     - _Requirements: 15.3, 7.6, 8.2_
 
-  - [-] 8.2 Implement rule-based fallbacks
+  - [x] 8.2 Implement rule-based fallbacks
     - Create `ai/fallback/moderation_rules.py` mapping harmful keyword patterns to `blocked`/`flagged`/`approved`, and `ai/fallback/scam_rules.py` scoring money/urgency/prize-airtime/link signals clamped to [0,100]
     - _Requirements: 7.5, 8.2_
 
