@@ -76,12 +76,3 @@ def require_admin(current_user: CurrentUser) -> User:
 
 
 AdminUser = Annotated[User, Depends(require_admin)]
-
-
-def build_auth_service_dependency(users: UserRepository):  # pragma: no cover
-    """Placeholder kept intentionally unused; see ``app.routers.auth``.
-
-    The auth service is constructed in the auth router where the request-scoped
-    repository is available; this module only houses the guard dependencies.
-    """
-    raise NotImplementedError
