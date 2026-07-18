@@ -154,7 +154,6 @@ def test_retries_up_to_four_attempts_then_records_failure(session) -> None:
     assert all(r.headers["apiKey"] == TEST_CONFIG.at_api_key for r in captured)
 
     # A failure record captures the target phone and notification type (Req 14.4).
-    recorded = failures.list_all() if hasattr(failures, "list_all") else None
     from app.models.notification_failure import NotificationFailure
 
     rows = session.query(NotificationFailure).all()

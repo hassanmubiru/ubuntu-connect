@@ -123,39 +123,34 @@ def _deliver(service: NotificationService, kind: str, phone: str, message: str):
     kind=_KIND,
     message=_MESSAGE,
 )
-def test_retry_bound_and_failure_recording(
-    session, succeed_on, phone, kind, message
-):
-    gateway = _FakeGateway(succeed_on)
-    failures = NotificationFailureRepository(session)
-    service = NotificationService(gateway, failures)
+def test_retry_bound_and_failure_recording(succeed_on, phone, kind, message):
+    with _in_memory_session() as session:
+        gateway = _FakeGateway(succeed_on)
+        failures = NotificationFailureRepository(session)
+        service = NotificationService(gateway, failures)
 
-    before = _count_failures(session)
-    result = _deliver(service, kind, phone, message)
-    session.flush()
+        result = _deliver(service, kind, phone, message)
+        session.flush()
 
-    # Delivery is never attempted more than the 4-attempt bound.
-    assert gateway.attempts <= MAX_ATTEMPTS
+        # Delivery is never attempted more than the 4-attempt bound.
+        assert gateway.attempts <= MAX_ATTEMPTS
 
-    if succeed_on is None:
-        # Always-fail: exactly MAX_ATTEMPTS attempts, undelivered, one record.
-        assert gateway.attempts == MAX_ATTEMPTS
-        assert result.delivered is False
-        assert result.attempts == MAX_ATTEMPTS
+        if succeed_on is None:
+            # Always-fail: exactly MAX_ATTEMPTS attempts, undelivered, one record.
+            assert gateway.attempts == MAX_ATTEMPTS
+            assert result.delivered is False
+            assert result.attempts == MAX_ATTEMPTS
 
-        assert _count_failures(session) == before + 1
-        record = session.execute(
-            select(NotificationFailure).order_by(
-                NotificationFailure.created_at.desc()
-            )
-        ).scalars().first()
-        assert record is not None
-        assert record.phone == phone
-        assert record.notification_type == kind
-    else:
-        # Success on attempt k: stops early at k, delivered, no failure record.
-        assert gateway.attempts == succeed_on
-        assert result.delivered is True
-        assert result.attempts == succeed_on
-        assert result.notification_type == kind
-        assert _count_failures(session) == before
+            assert _count_failures(session) == 1
+            record = session.execute(
+                select(NotificationFailure)
+            ).scalars().one()
+            assert record.phone == phone
+            assert record.notification_type == kind
+        else:
+            # Success on attempt k: stops early at k, delivered, no failure record.
+            assert gateway.attempts == succeed_on
+            assert result.delivered is True
+            assert result.attempts == succeed_on
+            assert result.notification_type == kind
+            assert _count_failures(session) == 0
