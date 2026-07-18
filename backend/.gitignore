@@ -1,0 +1,13 @@
+# Virtual environments / local dependency installs
+.venv/
+.pydeps/
+
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.hypothesis/
+
+# Environment files (never commit credentials, Req 15.4)
+.env
+.env.*
