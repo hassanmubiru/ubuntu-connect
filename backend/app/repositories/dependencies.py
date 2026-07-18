@@ -25,6 +25,9 @@ from sqlalchemy.orm import Session
 
 from app.db import get_session
 from app.repositories.message_repository import MessageRepository
+from app.repositories.notification_failure_repository import (
+    NotificationFailureRepository,
+)
 from app.repositories.otp_repository import OtpRepository
 from app.repositories.report_repository import ReportRepository
 from app.repositories.trust_reason_repository import TrustReasonRepository
@@ -59,6 +62,13 @@ def get_trust_reason_repository(session: SessionDep) -> TrustReasonRepository:
     return TrustReasonRepository(session)
 
 
+def get_notification_failure_repository(
+    session: SessionDep,
+) -> NotificationFailureRepository:
+    """Provide a :class:`NotificationFailureRepository` bound to the request session."""
+    return NotificationFailureRepository(session)
+
+
 # Annotated aliases so services/routers can declare typed injected params:
 #   users: UserRepositoryDep
 UserRepositoryDep = Annotated[UserRepository, Depends(get_user_repository)]
@@ -69,4 +79,7 @@ ReportRepositoryDep = Annotated[ReportRepository, Depends(get_report_repository)
 OtpRepositoryDep = Annotated[OtpRepository, Depends(get_otp_repository)]
 TrustReasonRepositoryDep = Annotated[
     TrustReasonRepository, Depends(get_trust_reason_repository)
+]
+NotificationFailureRepositoryDep = Annotated[
+    NotificationFailureRepository, Depends(get_notification_failure_repository)
 ]

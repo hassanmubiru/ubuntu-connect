@@ -11,17 +11,22 @@ from __future__ import annotations
 from app.repositories.base import ASC, DESC, BaseRepository
 from app.repositories.dependencies import (
     MessageRepositoryDep,
+    NotificationFailureRepositoryDep,
     OtpRepositoryDep,
     ReportRepositoryDep,
     TrustReasonRepositoryDep,
     UserRepositoryDep,
     get_message_repository,
+    get_notification_failure_repository,
     get_otp_repository,
     get_report_repository,
     get_trust_reason_repository,
     get_user_repository,
 )
 from app.repositories.message_repository import MessageRepository
+from app.repositories.notification_failure_repository import (
+    NotificationFailureRepository,
+)
 from app.repositories.otp_repository import OtpRepository
 from app.repositories.report_repository import ReportRepository
 from app.repositories.trust_reason_repository import TrustReasonRepository
@@ -36,14 +41,17 @@ __all__ = [
     "ReportRepository",
     "OtpRepository",
     "TrustReasonRepository",
+    "NotificationFailureRepository",
     "get_user_repository",
     "get_message_repository",
     "get_report_repository",
     "get_otp_repository",
     "get_trust_reason_repository",
+    "get_notification_failure_repository",
     "UserRepositoryDep",
     "MessageRepositoryDep",
     "ReportRepositoryDep",
     "OtpRepositoryDep",
     "TrustReasonRepositoryDep",
+    "NotificationFailureRepositoryDep",
 ]
