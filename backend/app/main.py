@@ -12,6 +12,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from app.config import Config
+from app.schemas.errors import register_exception_handlers
 
 APP_TITLE = "Ubuntu Connect API"
 APP_DESCRIPTION = (
