@@ -1,0 +1,24 @@
+# Ubuntu Connect backend runtime + test dependencies (pinned)
+# Web framework and typed schemas
+fastapi==0.115.6
+pydantic==2.10.4
+pydantic-settings==2.7.1
+uvicorn[standard]==0.34.0
+
+# ORM and PostgreSQL driver
+SQLAlchemy==2.0.36
+psycopg[binary]==3.2.3
+
+# Auth / JWT
+python-jose[cryptography]==3.3.0
+
+# Multipart form parsing (profile photo uploads)
+python-multipart==0.0.20
+
+# HTTP client for integrations (Africa's Talking, OpenAI)
+httpx==0.28.1
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.25.0
+hypothesis==6.123.2
