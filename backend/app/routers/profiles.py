@@ -25,7 +25,6 @@ import uuid
 from fastapi import APIRouter, Request
 
 from app.config import Config
-from app.models.user import User
 from app.repositories.dependencies import UserRepositoryDep
 from app.routers.dependencies import CurrentUser
 from app.schemas.profile import (
