@@ -188,12 +188,12 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create `ai/moderation_service.py` returning a label via OpenAI within budget and falling back to rules on timeout/error, and `ai/scam_detector.py` returning a [0,100] score with the same fallback behavior; both return the same typed result regardless of path
     - _Requirements: 7.1, 7.5, 7.6, 8.1, 8.2, 8.6_
 
-  - [-] 8.4 Write property test for valid moderation label including fallback
+  - [x] 8.4 Write property test for valid moderation label including fallback
     - **Feature: ubuntu-connect, Property 26: For any message — including when the OpenAI API is unavailable — moderation assigns a Moderation_Result that is one of "approved", "flagged", or "blocked".**
     - Mock the OpenAI client to simulate success, timeout, and error paths
     - **Validates: Requirements 7.1, 7.5**
 
-  - [-] 8.5 Write property test for bounded scam score including fallback
+  - [x] 8.5 Write property test for bounded scam score including fallback
     - **Feature: ubuntu-connect, Property 30: For any message that passes moderation — including when OpenAI errors or exceeds its time budget — the assigned Scam_Score is an integer in [0, 100] and is stored on the message before delivery.**
     - **Validates: Requirements 8.1, 8.2, 8.6**
 
