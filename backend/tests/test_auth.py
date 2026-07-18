@@ -20,9 +20,10 @@ from sqlalchemy.pool import StaticPool
 
 from app import db
 from app.config import Config
+from app.integrations.sms_gateway import SmsResult
 from app.models import Base, User
 from app.routers import auth as auth_router
-from app.routers.dependencies import AdminUser, CurrentUser
+from app.routers.dependencies import AdminUser, CurrentUser, get_sms_gateway
 from app.schemas.errors import register_exception_handlers
 from app.services.auth_service import (
     JWT_ALGORITHM,
