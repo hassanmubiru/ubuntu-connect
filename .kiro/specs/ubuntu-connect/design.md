@@ -429,3 +429,362 @@ Monotonicity properties the design guarantees:
 On every recalculation, the engine writes one `trust_reasons` row per factor (Req 5.6), e.g. for Zainab Abdullahi (+254712345678, unverified): "Phone verification: not verified (+0)", "Profile completeness: 1 of 3 fields (+10)", "Activity: 15 messages (+15)", "Confirmed reports: 0 (−0)" → clamp → 25. The explanation endpoint returns these entries (Req 5.7); a score with no entries returns an error (Req 5.8).
 
 ## Correctness Properties
+
+
+*A property is a characteristic or behavior that should hold true across all valid executions of a system — essentially, a formal statement about what the system should do. Properties serve as the bridge between human-readable specifications and machine-verifiable correctness guarantees.*
+
+Ubuntu Connect has substantial pure business logic (Trust Engine scoring, validation rules, OTP lifecycle, the moderation/scam pipeline control flow, scam/caution thresholds, USSD and SMS truncation, and retry bounds), so property-based testing applies. The AI classification/scoring calls are mocked so tests exercise our orchestration and fallback logic, not OpenAI's behavior. Properties below are derived from the prework classification; redundant criteria have been consolidated per the reflection notes.
+
+### Property 1: Registration establishes defaults
+
+*For any* valid full name (2–100 characters) and any E.164 phone not already registered, registering creates exactly one user record with `verified_phone` false, `trust_score` 0, and `created_at` set.
+
+**Validates: Requirements 1.1, 1.6**
+
+### Property 2: Duplicate phone registration is rejected without side effects
+
+*For any* phone already belonging to a user, a subsequent registration with that phone is rejected and the total user count is unchanged.
+
+**Validates: Requirements 1.2**
+
+### Property 3: Registration input validation
+
+*For any* registration request, it is rejected identifying the offending field(s) when the phone is not valid E.164, when the phone or full name is missing, when the full name is empty/whitespace, or when the full name length is <2 or >100; otherwise it is accepted.
+
+**Validates: Requirements 1.3, 1.4, 1.5**
+
+### Property 4: OTP generation shape and expiry
+
+*For any* newly created user, the generated OTP is a 6-digit numeric code, an SMS send is requested to that user's phone, and the stored OTP expiry equals its creation time plus 10 minutes.
+
+**Validates: Requirements 2.1, 2.2**
+
+### Property 5: Correct OTP before expiry verifies the phone
+
+*For any* stored OTP, submitting the matching code before its expiry sets the user's `verified_phone` to true.
+
+**Validates: Requirements 2.3**
+
+### Property 6: Wrong OTP attempts accumulate and cap at five
+
+*For any* stored OTP, each wrong submission while fewer than 5 failures are recorded is rejected as incorrect and increments the failure count; the 5th wrong submission invalidates the OTP and returns a maximum-attempts error.
+
+**Validates: Requirements 2.4, 2.5**
+
+### Property 7: Expired OTP is rejected
+
+*For any* stored OTP submitted at or after its expiry time, the submission is rejected as expired.
+
+**Validates: Requirements 2.6**
+
+### Property 8: OTP resend throttling
+
+*For any* user with fewer than 5 OTP requests in the trailing 60 minutes, a resend invalidates the prior OTP, resets the failed-attempt count, and generates a new OTP; the 6th request within the window is rejected with the resend-limit error.
+
+**Validates: Requirements 2.7, 2.8**
+
+### Property 9: SMS delivery failure is recoverable
+
+*For any* OTP send that the SMS gateway reports as failed, the service returns a send-failure error and a subsequent resend is still permitted.
+
+**Validates: Requirements 2.9**
+
+### Property 10: Login gating by verification and credentials
+
+*For any* account, login issues a JWT identifying that user only when credentials are valid and `verified_phone` is true; it is rejected with a verification-required error when unverified, and with an authentication error when credentials match no record.
+
+**Validates: Requirements 3.1, 3.2, 3.3**
+
+### Property 11: Login credential validation
+
+*For any* login request omitting a required credential field, the request is rejected identifying each missing field.
+
+**Validates: Requirements 3.4**
+
+### Property 12: JWT expiry is 24 hours
+
+*For any* issued JWT, its expiry timestamp equals its issue timestamp plus 24 hours.
+
+**Validates: Requirements 3.5**
+
+### Property 13: Protected endpoints reject bad tokens
+
+*For any* protected endpoint request carrying no token, an expired token, or an invalid/tampered token, the request is rejected with an authentication error.
+
+**Validates: Requirements 3.6**
+
+### Property 14: Bio round-trip and validation
+
+*For any* bio of 500 characters or fewer, saving then reading it returns the same value; *for any* bio longer than 500 characters, the update is rejected identifying the bio field.
+
+**Validates: Requirements 4.1, 4.2**
+
+### Property 15: Interests round-trip and validation preserves prior value
+
+*For any* interests list of at most 20 items each at most 50 characters, saving then reading returns the same list; *for any* list exceeding those limits, the update is rejected identifying the interests field and the previously stored interests are unchanged.
+
+**Validates: Requirements 4.3, 4.4**
+
+### Property 16: Photo format and size validation
+
+*For any* uploaded photo, it is stored and associated with the user when it is JPEG or PNG and at most 5 MB; it is rejected identifying accepted formats for other formats, and rejected identifying the size limit when larger than 5 MB.
+
+**Validates: Requirements 4.5, 4.6, 4.7**
+
+### Property 17: Profile display includes trust and verification
+
+*For any* user, the displayed profile payload includes that user's current Trust_Score and Verified_Phone state.
+
+**Validates: Requirements 4.8, 9.4**
+
+### Property 18: Trust score is a bounded integer
+
+*For any* user state, the computed Trust_Score is an integer in the inclusive range [0, 100].
+
+**Validates: Requirements 5.1**
+
+### Property 19: Trust score factor monotonicity
+
+*For any* two user states differing only in one factor, the Trust_Score is non-decreasing as phone verification becomes true, non-decreasing as more of the three profile fields are populated, and non-increasing as the count of confirmed reports increases.
+
+**Validates: Requirements 5.2, 5.3, 5.4**
+
+### Property 20: Trust score equals its four-factor function
+
+*For any* user state, the Trust_Score equals the documented clamped function of exactly the four factors (phone verification, populated profile-field count, confirmed-report count, messages sent); changing an input outside those four does not change the score.
+
+**Validates: Requirements 5.5**
+
+### Property 21: Trust reasons are complete and round-trip through explanation
+
+*For any* Trust_Score recalculation, the engine records one reason entry per contributing factor, and requesting the explanation returns exactly the recorded reason entries.
+
+**Validates: Requirements 5.6, 5.7**
+
+### Property 22: Passing message persists all fields and round-trips
+
+*For any* message of 1–2000 characters that passes moderation and scam checks, it is persisted with sender_id, receiver_id, content, moderation_result, scam_score, and created_at, and reading it back yields the same values.
+
+**Validates: Requirements 6.1**
+
+### Property 23: Conversation history is complete and ordered ascending
+
+*For any* set of messages exchanged between two users, opening the conversation returns exactly those messages ordered by created_at ascending.
+
+**Validates: Requirements 6.3**
+
+### Property 24: Message content-length validation
+
+*For any* submitted message whose content is empty or longer than 2000 characters, the message is rejected with a validation error identifying the content field.
+
+**Validates: Requirements 6.5**
+
+### Property 25: Offline messages are retained and later delivered
+
+*For any* message accepted for a receiver with no active session, the message is retained and appears when the receiver next opens the conversation.
+
+**Validates: Requirements 6.6**
+
+### Property 26: Moderation always yields a valid label, including on fallback
+
+*For any* message — including when the OpenAI API is unavailable — moderation assigns a Moderation_Result that is one of "approved", "flagged", or "blocked".
+
+**Validates: Requirements 7.1, 7.5**
+
+### Property 27: Blocked messages halt the pipeline with no side effects
+
+*For any* message whose Moderation_Result is "blocked", the message is neither persisted nor delivered, scam detection is not invoked, and a content-policy error is returned.
+
+**Validates: Requirements 7.2**
+
+### Property 28: Approved messages proceed to scam detection
+
+*For any* message whose Moderation_Result is "approved", the scam detector is invoked.
+
+**Validates: Requirements 7.3**
+
+### Property 29: Flagged messages persist but are withheld and exposed to admins
+
+*For any* message whose Moderation_Result is "flagged", the message is persisted with the flagged result, withheld from delivery to the receiver, and made available to the Admin_Panel.
+
+**Validates: Requirements 7.4**
+
+### Property 30: Scam score is a bounded integer, including on fallback
+
+*For any* message that passes moderation — including when OpenAI errors or exceeds its time budget — the assigned Scam_Score is an integer in [0, 100] and is stored on the message before delivery.
+
+**Validates: Requirements 8.1, 8.2, 8.6**
+
+### Property 31: Scam warning threshold at 70
+
+*For any* delivered message, a scam safety warning is attached if and only if its Scam_Score is 70 or greater.
+
+**Validates: Requirements 8.3, 8.5**
+
+### Property 32: High scam scores create admin alerts
+
+*For any* message with a Scam_Score of 70 or greater, a scam alert available to the Admin_Panel is created.
+
+**Validates: Requirements 8.4**
+
+### Property 33: Scam warning rendering follows the message flag
+
+*For any* rendered message, the scam warning is displayed adjacent to the content if and only if the message carries the scam safety warning.
+
+**Validates: Requirements 9.1**
+
+### Property 34: Caution indicator threshold at 30
+
+*For any* rendered conversation, a caution indicator is displayed if and only if the partner's Trust_Score is below 30.
+
+**Validates: Requirements 9.2, 9.3**
+
+### Property 35: Dashboard conversation limit and ordering
+
+*For any* set of a user's conversations, the Dashboard displays at most the 20 most recent, ordered by each conversation's most recent message created_at descending.
+
+**Validates: Requirements 10.1**
+
+### Property 36: Dashboard shows only unread safety notifications
+
+*For any* mix of read and unread safety notifications for a user, the Dashboard displays exactly the unread ones.
+
+**Validates: Requirements 10.3**
+
+### Property 37: Admin routes reject non-administrators
+
+*For any* request to an Admin_Panel route from a non-Administrator account, the request is rejected with an authorization error.
+
+**Validates: Requirements 11.1**
+
+### Property 38: Flagged-users view membership and ordering
+
+*For any* dataset, the flagged-users view lists exactly the users having at least one flagged message or at least one confirmed report, ordered by their most recent flagged message or confirmed report descending.
+
+**Validates: Requirements 11.2**
+
+### Property 39: Reports view fields and ordering
+
+*For any* set of reports, the reports view shows each report's reporter, reported_user, reason, and status, ordered by created_at descending.
+
+**Validates: Requirements 11.3**
+
+### Property 40: Report resolution validity
+
+*For any* pending report, resolving it with "confirmed" or "dismissed" updates its status to that decision; *for any* other decision value, the request is rejected identifying the accepted values and the status is unchanged.
+
+**Validates: Requirements 11.4, 11.5**
+
+### Property 41: Scam alerts view membership and ordering
+
+*For any* set of messages, the scam alerts view shows exactly the messages with a Scam_Score of 70 or greater, ordered by created_at descending.
+
+**Validates: Requirements 11.7**
+
+### Property 42: Report creation defaults and validation
+
+*For any* report submission, when it identifies an existing other user and a reason of 1–1000 characters it creates a record with reporter, reported_user, reason, status "pending", and created_at; it is rejected identifying missing fields when reported_user or reason is absent, for self-reporting, and when the reason exceeds 1000 characters.
+
+**Validates: Requirements 12.1, 12.2, 12.3, 12.5**
+
+### Property 43: Duplicate pending report is rejected
+
+*For any* reporter with an existing pending report against a given user, a second report against that same user is rejected indicating a pending report already exists.
+
+**Validates: Requirements 12.6**
+
+### Property 44: USSD menu depends on registration state
+
+*For any* USSD session, an unregistered phone is offered a register option, and a registered user is offered view-profile, view-trust-score, and inbox-preview options.
+
+**Validates: Requirements 13.1, 13.2**
+
+### Property 45: USSD registration creates a user with defaults and triggers OTP
+
+*For any* non-empty full name provided over USSD for an unregistered phone, a user record is created with `verified_phone` false and `trust_score` 0 and OTP delivery is triggered through the SMS_Gateway.
+
+**Validates: Requirements 13.3**
+
+### Property 46: USSD profile view uses placeholders for empty fields
+
+*For any* registered user, the USSD view-profile response includes the full name and returns a placeholder wherever the bio or interests are empty.
+
+**Validates: Requirements 13.5**
+
+### Property 47: USSD trust score view returns current score
+
+*For any* registered user, the USSD view-trust-score response includes that user's current Trust_Score.
+
+**Validates: Requirements 13.6**
+
+### Property 48: USSD inbox preview limit and truncation
+
+*For any* registered user's messages, the USSD inbox preview returns at most the 5 most recent, each showing the sender name and a content preview truncated to 40 characters.
+
+**Validates: Requirements 13.7**
+
+### Property 49: USSD invalid selection re-shows the menu
+
+*For any* menu selection not offered in the current USSD menu, the service returns the current menu again with a message indicating the selection is not valid.
+
+**Validates: Requirements 13.9**
+
+### Property 50: SMS notifications are truncated to 160 characters
+
+*For any* match notification or safety alert, the text sent through the SMS_Gateway is truncated to 160 characters or fewer.
+
+**Validates: Requirements 14.1, 14.2**
+
+### Property 51: Notification retry bound and failure recording
+
+*For any* notification whose delivery keeps failing, delivery is attempted at most 4 times total (initial plus 3 retries), and if all attempts fail a failure record is written capturing the target phone number and the notification type.
+
+**Validates: Requirements 14.3, 14.4**
+
+### Property 52: Missing required env vars halt startup and are all named
+
+*For any* subset of required environment variables that is absent at startup, the backend halts without serving requests and emits an error naming each missing variable.
+
+**Validates: Requirements 15.5**
+
+### Property 53: Validation rejects with per-field reasons and no writes
+
+*For any* request with input that fails validation, the request is rejected, no changes are written to the data store, and the error response identifies each invalid field together with the reason it failed.
+
+**Validates: Requirements 16.1**
+
+### Property 54: Unhandled exceptions produce safe responses and no partial writes
+
+*For any* backend operation that raises an unhandled exception, the response carries a generic message with no internal details and previously persisted data is left unchanged.
+
+**Validates: Requirements 16.2**
+
+### Property 55: Spacing tokens are multiples of 8 pixels
+
+*For any* layout margin, padding, or gap value used by the frontend, the value is a whole multiple of 8 pixels.
+
+**Validates: Requirements 17.3**
+
+### Property 56: Text contrast meets 4.5:1
+
+*For any* text/background color-token pair used for normal-size text, the contrast ratio is at least 4.5:1.
+
+**Validates: Requirements 17.5**
+
+### Property 57: Touch targets meet 44x44 on small viewports
+
+*For any* interactive element rendered at a viewport width of 640 pixels or less, its touch target is at least 44 by 44 pixels.
+
+**Validates: Requirements 17.6**
+
+### Property 58: Transitions are at most 200 milliseconds
+
+*For any* interface transition token, its duration is 200 milliseconds or less.
+
+**Validates: Requirements 18.3**
+
+### Property 59: Trust badge value and accent threshold
+
+*For any* displayed profile, the Trust_Score badge shows the user's score as an integer in [0, 100], and is rendered with the accent color #F59E0B if and only if the score is 70 or greater.
+
+**Validates: Requirements 18.4, 18.5, 18.6**
