@@ -23,10 +23,14 @@ APP_VERSION = "0.1.0"
 def create_app() -> FastAPI:
     """Build and return the Ubuntu Connect FastAPI application.
 
-    Later tasks extend this factory to validate required environment
-    variables before serving requests (Req 15.5) and to register the
+    Required environment variables are validated up front: if any are
+    missing, :meth:`Config.validate` raises before the app is constructed
+    and before any port is bound, halting startup without serving requests
+    and naming each missing variable (Req 15.5). Later tasks register the
     router modules under ``app.routers``.
     """
+    Config.from_env().validate()
+
     app = FastAPI(
         title=APP_TITLE,
         description=APP_DESCRIPTION,
