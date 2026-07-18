@@ -38,6 +38,15 @@ def create_app() -> FastAPI:
         version=APP_VERSION,
     )
 
+    # Install the global handlers that render every failure as the shared
+    # error envelope: field-level validation errors (Req 16.1), typed
+    # application errors, and a generic no-internals response for anything
+    # unexpected (Req 16.2). All write-path requests run inside the
+    # transactional session dependency (app.db.get_session), so a raised
+    # exception rolls the transaction back before the response is formatted
+    # and no partial write survives.
+    register_exception_handlers(app)
+
     @app.get("/health", tags=["system"])
     def health() -> dict[str, str]:
         """Liveness probe used by infrastructure and smoke tests."""
