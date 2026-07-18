@@ -17,7 +17,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create `backend/app/main.py` app factory and a `pytest.ini`/`conftest.py` with a Hypothesis profile of min 100 examples
     - _Requirements: 15.1_
 
-  - [-] 1.2 Implement environment-variable config with fail-fast validation
+  - [x] 1.2 Implement environment-variable config with fail-fast validation
     - Create `backend/app/config.py` reading `DATABASE_URL`, `JWT_SECRET`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `AT_API_KEY`, `AT_USERNAME`, `AT_SMS_SENDER_ID`, `AT_USSD_SERVICE_CODE`, `PHOTO_STORAGE_BUCKET` from the environment with no literal credential/endpoint values in source
     - Implement `config.validate()` that collects every missing required variable and raises during app construction (before binding a port), emitting an error naming each missing variable
     - Wire `config.validate()` into the `main.py` app factory startup path
@@ -28,7 +28,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - **Validates: Requirements 15.5**
 
 - [ ] 2. Implement data models and repository layer
-  - [-] 2.1 Define SQLAlchemy ORM models and DB session wiring
+  - [x] 2.1 Define SQLAlchemy ORM models and DB session wiring
     - Create `models/` entities: `User` (id, full_name, phone unique, bio, interests JSONB, profile_photo, trust_score, verified_phone, is_admin, created_at), `Message` (sender_id, receiver_id, content, moderation_result, scam_score nullable, delivered, created_at), `Report` (reporter, reported_user, reason, status, created_at), `TrustReason` (user_id, factor, contribution, description, created_at), `OtpCode` (user_id, code, failed_attempts, expires_at, invalidated, created_at)
     - Add `NotificationFailure` model (phone, notification_type, created_at) for Req 14.4
     - Create DB engine/session factory and a transactional session dependency used by routers
