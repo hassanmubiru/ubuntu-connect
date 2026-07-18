@@ -65,32 +65,32 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Implement the JWT auth-guard dependency rejecting missing/expired/invalid tokens, plus an admin role guard
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 3.1, 3.2, 3.3, 3.4, 3.5, 3.6, 11.1_
 
-  - [ ] 4.2 Write property test for registration defaults
+  - [x] 4.2 Write property test for registration defaults
     - **Feature: ubuntu-connect, Property 1: For any valid full name (2–100 characters) and any E.164 phone not already registered, registering creates exactly one user record with verified_phone false, trust_score 0, and created_at set.**
     - **Validates: Requirements 1.1, 1.6**
 
-  - [ ] 4.3 Write property test for duplicate-phone rejection
+  - [x] 4.3 Write property test for duplicate-phone rejection
     - **Feature: ubuntu-connect, Property 2: For any phone already belonging to a user, a subsequent registration with that phone is rejected and the total user count is unchanged.**
     - **Validates: Requirements 1.2**
 
-  - [ ] 4.4 Write property test for registration input validation
+  - [x] 4.4 Write property test for registration input validation
     - **Feature: ubuntu-connect, Property 3: For any registration request, it is rejected identifying the offending field(s) when the phone is not valid E.164, when the phone or full name is missing, when the full name is empty/whitespace, or when the full name length is <2 or >100; otherwise it is accepted.**
     - Generators use E.164 African prefixes (+234, +27, +233, +254) and near-miss non-E.164 strings
     - **Validates: Requirements 1.3, 1.4, 1.5**
 
-  - [ ] 4.5 Write property test for login gating
+  - [x] 4.5 Write property test for login gating
     - **Feature: ubuntu-connect, Property 10: For any account, login issues a JWT identifying that user only when credentials are valid and verified_phone is true; it is rejected with a verification-required error when unverified, and with an authentication error when credentials match no record.**
     - **Validates: Requirements 3.1, 3.2, 3.3**
 
-  - [ ] 4.6 Write property test for login credential validation
+  - [x] 4.6 Write property test for login credential validation
     - **Feature: ubuntu-connect, Property 11: For any login request omitting a required credential field, the request is rejected identifying each missing field.**
     - **Validates: Requirements 3.4**
 
-  - [ ] 4.7 Write property test for JWT 24-hour expiry
+  - [-] 4.7 Write property test for JWT 24-hour expiry
     - **Feature: ubuntu-connect, Property 12: For any issued JWT, its expiry timestamp equals its issue timestamp plus 24 hours.**
     - **Validates: Requirements 3.5**
 
-  - [ ] 4.8 Write property test for protected-endpoint token rejection
+  - [-] 4.8 Write property test for protected-endpoint token rejection
     - **Feature: ubuntu-connect, Property 13: For any protected endpoint request carrying no token, an expired token, or an invalid/tampered token, the request is rejected with an authentication error.**
     - **Validates: Requirements 3.6**
 
@@ -197,7 +197,7 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - **Feature: ubuntu-connect, Property 30: For any message that passes moderation — including when OpenAI errors or exceeds its time budget — the assigned Scam_Score is an integer in [0, 100] and is stored on the message before delivery.**
     - **Validates: Requirements 8.1, 8.2, 8.6**
 
-  - [ ] 8.6 Write unit tests for AI timeout switchover to fallback
+  - [-] 8.6 Write unit tests for AI timeout switchover to fallback
     - Simulate OpenAI exceeding the 5s moderation and 3s scam budgets and assert the rule-based fallback result is used
     - _Requirements: 7.6, 8.2_
 
