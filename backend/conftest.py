@@ -17,6 +17,24 @@ import os
 
 from hypothesis import HealthCheck, Verbosity, settings
 
+# Provide placeholder values for every required environment variable so the
+# app factory's fail-fast config validation (Req 15.5) is satisfied during
+# tests. These are test fixtures, not real credentials or endpoints, and only
+# set defaults when the variable is not already present in the environment.
+_TEST_ENV_DEFAULTS = {
+    "DATABASE_URL": "postgresql+psycopg://test:test@localhost:5432/ubuntu_connect_test",
+    "JWT_SECRET": "test-jwt-secret",
+    "OPENAI_API_KEY": "test-openai-key",
+    "OPENAI_BASE_URL": "http://localhost:9/v1",
+    "AT_API_KEY": "test-at-key",
+    "AT_USERNAME": "test-at-username",
+    "AT_SMS_SENDER_ID": "UBUNTU",
+    "AT_USSD_SERVICE_CODE": "*384*0000#",
+    "PHOTO_STORAGE_BUCKET": "test-photo-bucket",
+}
+for _key, _value in _TEST_ENV_DEFAULTS.items():
+    os.environ.setdefault(_key, _value)
+
 MIN_EXAMPLES = 100
 
 settings.register_profile(
