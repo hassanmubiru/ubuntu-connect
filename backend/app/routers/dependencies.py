@@ -21,6 +21,7 @@ from fastapi import Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import Config
+from app.integrations.sms_gateway import SmsGateway
 from app.models.user import User
 from app.repositories.dependencies import UserRepositoryDep
 from app.schemas.errors import AuthError, AuthorizationError
