@@ -37,6 +37,7 @@ from app.services.otp_service import (
     MAX_FAILED_ATTEMPTS,
     OTP_TTL,
     OTPService,
+    _as_utc,
 )
 
 PHONE = "+2348031234567"
@@ -120,7 +121,8 @@ def test_generate_and_send_produces_six_digit_code_and_ten_minute_expiry(session
     otp = otps.get_active_for_user(user.id)
     assert otp is not None
     assert re.fullmatch(r"\d{6}", otp.code)
-    assert otp.expires_at == fixed + OTP_TTL
+    # SQLite returns the stored timestamp timezone-naive; normalize to UTC.
+    assert _as_utc(otp.expires_at) == fixed + OTP_TTL
     assert gateway.sent == [(user.phone, otp.code)]
 
 
