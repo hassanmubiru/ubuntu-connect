@@ -304,15 +304,15 @@ Test fixtures use realistic African data: Amara Okafor (+2348031234567), Thandiw
     - Create `services/notification_service.py` truncating notifications to ≤160 chars, delivering within 30s, retrying up to 3 additional times, and writing a `notification_failures` record (phone + type) when all attempts fail
     - _Requirements: 14.1, 14.2, 14.3, 14.4_
 
-  - [-] 12.2 Write property test for SMS notification truncation
+  - [x] 12.2 Write property test for SMS notification truncation
     - **Feature: ubuntu-connect, Property 50: For any match notification or safety alert, the text sent through the SMS_Gateway is truncated to 160 characters or fewer.**
     - **Validates: Requirements 14.1, 14.2**
 
-  - [-] 12.3 Write property test for retry bound and failure recording
+  - [x] 12.3 Write property test for retry bound and failure recording
     - **Feature: ubuntu-connect, Property 51: For any notification whose delivery keeps failing, delivery is attempted at most 4 times total (initial plus 3 retries), and if all attempts fail a failure record is written capturing the target phone number and the notification type.**
     - **Validates: Requirements 14.3, 14.4**
 
-  - [-] 12.4 Write integration test for SMS client request shaping and retries
+  - [x] 12.4 Write integration test for SMS client request shaping and retries
     - Mock the Africa's Talking gateway and assert request shape plus retry behavior
     - _Requirements: 14.1, 14.3_
 
