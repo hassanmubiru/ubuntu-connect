@@ -23,7 +23,6 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.config import Config
 from app.models.user import User
 from app.repositories.dependencies import UserRepositoryDep
-from app.repositories.user_repository import UserRepository
 from app.schemas.errors import AuthError, AuthorizationError
 from app.services.auth_service import decode_access_token
 
