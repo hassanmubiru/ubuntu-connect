@@ -65,13 +65,14 @@ def update_bio(
     body: BioUpdateRequest,
     current_user: CurrentUser,
     users: UserRepositoryDep,
+    trust: TrustEngineDep,
 ) -> ProfileResponse:
     """Save a bio of at most 500 characters (Req 4.1, 4.2).
 
     A longer bio is rejected by the request schema before this runs, naming the
     ``bio`` field; the service enforces the same limit as a safety net.
     """
-    updated = _profile_service(users).update_bio(current_user, body.bio)
+    updated = _profile_service(users, trust).update_bio(current_user, body.bio)
     return ProfileResponse.model_validate(updated)
 
 
