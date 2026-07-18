@@ -55,6 +55,7 @@ _STATUS_BY_CODE: dict[ErrorCode, int] = {
     ErrorCode.CONFLICT: 409,
     ErrorCode.POLICY_VIOLATION: 422,
     ErrorCode.RATE_LIMITED: 429,
+    ErrorCode.SEND_FAILURE: 502,
     ErrorCode.TIMEOUT: 504,
     ErrorCode.INTERNAL_ERROR: 500,
 }

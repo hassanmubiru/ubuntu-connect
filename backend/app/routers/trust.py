@@ -17,35 +17,14 @@ import uuid
 
 from fastapi import APIRouter
 
-from app.repositories.dependencies import (
-    MessageRepositoryDep,
-    ReportRepositoryDep,
-    TrustReasonRepositoryDep,
-    UserRepositoryDep,
-)
 from app.schemas.trust import (
     TrustExplanationResponse,
     TrustReasonResponse,
     TrustScoreResponse,
 )
-from app.services.trust_engine import TrustEngine
+from app.services.dependencies import TrustEngineDep
 
 router = APIRouter(prefix="/api/trust", tags=["trust"])
-
-
-def _trust_engine(
-    users: UserRepositoryDep,
-    messages: MessageRepositoryDep,
-    reports: ReportRepositoryDep,
-    trust_reasons: TrustReasonRepositoryDep,
-) -> TrustEngine:
-    """Build a request-scoped :class:`TrustEngine` over the repositories.
-
-    All four repositories are the request-scoped instances from dependency
-    injection, so any recalculation triggered elsewhere runs inside one
-    transactional unit of work.
-    """
-    return TrustEngine(users, messages, reports, trust_reasons)
 
 
 @router.get(
@@ -54,19 +33,13 @@ def _trust_engine(
     summary="Get a user's current Trust_Score.",
 )
 def get_trust_score(
-    user_id: uuid.UUID,
-    users: UserRepositoryDep,
-    messages: MessageRepositoryDep,
-    reports: ReportRepositoryDep,
-    trust_reasons: TrustReasonRepositoryDep,
+    user_id: uuid.UUID, trust: TrustEngineDep
 ) -> TrustScoreResponse:
     """Return the user's current Trust_Score, an integer in [0, 100] (Req 5.1).
 
     Rejects an unknown user with a not-found error.
     """
-    engine = _trust_engine(users, messages, reports, trust_reasons)
-    score = engine.get_score(user_id)
-    return TrustScoreResponse(user_id=user_id, trust_score=score)
+    return TrustScoreResponse(user_id=user_id, trust_score=trust.get_score(user_id))
 
 
 @router.get(
@@ -75,19 +48,14 @@ def get_trust_score(
     summary="Get the recorded reason entries behind a user's Trust_Score.",
 )
 def get_trust_explanation(
-    user_id: uuid.UUID,
-    users: UserRepositoryDep,
-    messages: MessageRepositoryDep,
-    reports: ReportRepositoryDep,
-    trust_reasons: TrustReasonRepositoryDep,
+    user_id: uuid.UUID, trust: TrustEngineDep
 ) -> TrustExplanationResponse:
     """Return the recorded reason entries for the user's score (Req 5.7).
 
     Rejects an unknown user with a not-found error, and a score with no
     recorded reason entries with a no-explanation-available error (Req 5.8).
     """
-    engine = _trust_engine(users, messages, reports, trust_reasons)
-    reasons = engine.get_explanation(user_id)
+    reasons = trust.get_explanation(user_id)
     return TrustExplanationResponse(
         user_id=user_id,
         reasons=[TrustReasonResponse.model_validate(r) for r in reasons],
