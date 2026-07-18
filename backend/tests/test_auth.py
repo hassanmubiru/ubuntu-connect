@@ -75,11 +75,24 @@ def _seed_user(**overrides) -> User:
         session.close()
 
 
+class _FakeSmsGateway:
+    """SMS gateway stub that accepts every send, so tests avoid the network."""
+
+    def send_otp(self, phone: str, code: str) -> SmsResult:
+        return SmsResult(success=True)
+
+    def send(self, phone: str, message: str) -> SmsResult:
+        return SmsResult(success=True)
+
+
 def _build_app() -> FastAPI:
     """App with the auth router plus test-only protected/admin routes."""
     app = FastAPI()
     register_exception_handlers(app)
     app.include_router(auth_router.router)
+    # Override the SMS gateway so registration's OTP trigger never touches the
+    # network; the OTP lifecycle itself is covered in test_otp_service.
+    app.dependency_overrides[get_sms_gateway] = lambda: _FakeSmsGateway()
 
     @app.get("/protected")
     def _protected(user: CurrentUser) -> dict[str, str]:
