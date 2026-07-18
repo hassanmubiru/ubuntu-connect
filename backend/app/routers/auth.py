@@ -28,6 +28,7 @@ from app.integrations.sms_gateway import SmsGateway
 from app.models.user import User
 from app.repositories.dependencies import OtpRepositoryDep, UserRepositoryDep
 from app.repositories.user_repository import UserRepository
+from app.routers.dependencies import SmsGatewayDep
 from app.schemas.auth import (
     LoginRequest,
     LoginResponse,
@@ -66,23 +67,27 @@ def _trust_recalc_hook(users: UserRepository) -> Callable[[User], None] | None:
     return lambda user: recalc(user, users)
 
 
-def _otp_service(otps: OtpRepositoryDep, users: UserRepositoryDep) -> OTPService:
+def _otp_service(
+    otps: OtpRepository, users: UserRepository, sms: SmsGateway
+) -> OTPService:
     """Build a request-scoped :class:`OTPService`.
 
     The OTP and user repositories are the request-scoped instances from
     dependency injection so the whole request runs inside one transactional
-    unit of work; the SMS gateway reads its credentials from the environment
-    (Req 15.4). A verified phone triggers the Trust Engine hook when wired.
+    unit of work; the SMS gateway is injected (overridable in tests). A
+    verified phone triggers the Trust Engine hook when wired.
     """
     return OTPService(
         otps,
         users,
-        SmsGateway(),
+        sms,
         on_verified=_trust_recalc_hook(users),
     )
 
 
-def _auth_service(users: UserRepositoryDep, otps: OtpRepositoryDep) -> AuthService:
+def _auth_service(
+    users: UserRepository, otps: OtpRepository, sms: SmsGateway
+) -> AuthService:
     """Build a request-scoped :class:`AuthService` with the OTP trigger.
 
     The JWT secret is read from the environment-sourced config (Req 15.4). The
@@ -90,7 +95,7 @@ def _auth_service(users: UserRepositoryDep, otps: OtpRepositoryDep) -> AuthServi
     (Req 2.1); a delivery failure leaves ``otp_sent`` false while the stored
     code remains available for resend (Req 2.9).
     """
-    otp_service = _otp_service(otps, users)
+    otp_service = _otp_service(otps, users, sms)
     return AuthService(
         users,
         Config.from_env().jwt_secret,
@@ -108,6 +113,7 @@ def register(
     body: RegisterRequest,
     users: UserRepositoryDep,
     otps: OtpRepositoryDep,
+    sms: SmsGatewayDep,
 ) -> RegisterResponse:
     """Create a user with registration defaults and trigger an OTP (Req 1, 2.1).
 
@@ -116,7 +122,7 @@ def register(
     before this runs (Req 1.3, 1.4, 1.5). On success the first OTP is generated
     and an SMS is requested; ``otp_sent`` reports whether delivery was accepted.
     """
-    result = _auth_service(users, otps).register(body.full_name, body.phone)
+    result = _auth_service(users, otps, sms).register(body.full_name, body.phone)
     return RegisterResponse(user_id=result.user.id, otp_sent=result.otp_sent)
 
 
@@ -129,6 +135,7 @@ def verify_otp(
     body: VerifyOtpRequest,
     users: UserRepositoryDep,
     otps: OtpRepositoryDep,
+    sms: SmsGatewayDep,
 ) -> VerifyOtpResponse:
     """Verify a submitted code (Req 2.3–2.6).
 
@@ -137,7 +144,7 @@ def verify_otp(
     with the corresponding error. A successful verification triggers the Trust
     Engine recalculation hook when wired (Req 5.2).
     """
-    verified = _otp_service(otps, users).verify(body.phone, body.code)
+    verified = _otp_service(otps, users, sms).verify(body.phone, body.code)
     return VerifyOtpResponse(verified=verified)
 
 
@@ -150,6 +157,7 @@ def resend_otp(
     body: ResendOtpRequest,
     users: UserRepositoryDep,
     otps: OtpRepositoryDep,
+    sms: SmsGatewayDep,
 ) -> ResendOtpResponse:
     """Issue a replacement OTP within the resend cap (Req 2.7–2.9).
 
@@ -158,7 +166,7 @@ def resend_otp(
     a resend-limit error, and a delivery failure is surfaced while leaving a
     further resend permitted.
     """
-    otp_sent = _otp_service(otps, users).resend(body.phone)
+    otp_sent = _otp_service(otps, users, sms).resend(body.phone)
     return ResendOtpResponse(otp_sent=otp_sent)
 
 
@@ -173,10 +181,5 @@ def login(body: LoginRequest, users: UserRepositoryDep) -> LoginResponse:
     Rejects an unverified account with a verification-required error and an
     unknown phone with an authentication error.
     """
-    result = _auth_service_login(users).login(body.phone)
+    result = AuthService(users, Config.from_env().jwt_secret).login(body.phone)
     return LoginResponse(jwt=result.token, expires_at=result.expires_at)
-
-
-def _auth_service_login(users: UserRepositoryDep) -> AuthService:
-    """Build an :class:`AuthService` for login (no OTP trigger needed)."""
-    return AuthService(users, Config.from_env().jwt_secret)

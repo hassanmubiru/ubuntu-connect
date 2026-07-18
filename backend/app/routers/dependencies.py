@@ -42,6 +42,19 @@ def _jwt_secret() -> str:
     return Config.from_env().jwt_secret
 
 
+def get_sms_gateway() -> SmsGateway:
+    """Provide the Africa's Talking SMS gateway (env-configured, Req 15.4).
+
+    Exposed as a FastAPI dependency so routes that send SMS (OTP delivery,
+    notifications) share one transport and tests can override it with a fake
+    without touching the network.
+    """
+    return SmsGateway()
+
+
+SmsGatewayDep = Annotated[SmsGateway, Depends(get_sms_gateway)]
+
+
 def get_current_user(
     credentials: BearerCredentials,
     users: UserRepositoryDep,
