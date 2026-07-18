@@ -13,6 +13,7 @@ from fastapi import FastAPI
 
 from app.config import Config
 from app.routers import auth as auth_router
+from app.routers import profiles as profiles_router
 from app.routers import trust as trust_router
 from app.schemas.errors import register_exception_handlers
 
@@ -50,9 +51,12 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
 
     # Feature routers. The auth router exposes registration and login
-    # (Req 1, 3); the trust router exposes the Trust_Score and its explanation
-    # (Req 5). Later tasks register the remaining feature routers here.
+    # (Req 1, 3); the profile router exposes bio/interests/photo updates and
+    # the profile view (Req 4, 9.4); the trust router exposes the Trust_Score
+    # and its explanation (Req 5). Later tasks register the remaining feature
+    # routers here.
     app.include_router(auth_router.router)
+    app.include_router(profiles_router.router)
     app.include_router(trust_router.router)
 
     @app.get("/health", tags=["system"])
